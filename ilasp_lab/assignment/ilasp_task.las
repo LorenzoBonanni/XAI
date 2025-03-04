@@ -1,6 +1,6 @@
 % background knowledge:
 
-rocks(0..3). %ids of rocks
+rocks(0..4). %ids of rocks
 ranges_dist(0..24). %12x12 grid
 guess_value(0). %possible probabilities of goodness of rocks
 guess_value(10).
@@ -8519,21 +8519,486 @@ guess_value(100).
 % Mode bias: 
 
 %main atom for head: good (use aggregate, one or no rock can be selected per time)
+#modeha(good(var(rocks))).
+
 %main atoms for body: 
 %guess(rocks, guess_value) := the rock is good with probability guess_value;
 %dist(rocks, ranges_dist) := Manhattan distance to the rock is ranges_dist;
+#modeb(1, guess(var(rocks), var(guess_value)), (positive)).
+#modeb(1, dist(var(rocks), var(ranges_dist)), (positive)).
 
 %distance and guess MAKE NO SENSE without specifying the ranges for ranges_dist and guess_value
 %it is possible to introduce arithmetic comparison in body
 %#constant(const_value, 0).
 %#constant(const_value, 1).
 %#constant(const_value, 2).
+%#constant(const_value, 3).
 %#modeb(1, var(value) < const(const_value))
+
+#constant(distance_th, 0..4).
+#constant(guess_value, 60).
+#constant(guess_value, 70).
+#constant(guess_value, 80).
+#constant(guess_value, 90).
+
+#modeb(2,var(ranges_dist)>=const(distance_th), (positive)).
+#modeb(2,var(ranges_dist)<=const(distance_th), (positive)).
+#modeb(2,var(guess_value)>=const(guess_value), (positive)).
+#modeb(2,var(guess_value)<=const(guess_value), (positive)).
+
 
 %You will have to generate the search space: max body length=4; no constraints
 %ILASP --version=4 --max-rule-length=6 -ml=4 -nc -s ilasp_task.las >> s_m.txt
 %Then make a Python script to clean useless rules
 %Then copy paste the pruned s_m here and run
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 >= 3.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 3.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 80.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 80; V2 <= 90.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 80.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 2.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 80; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 3.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 70.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70; V2 <= 80.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 <= 90.
+2 ~ 1 {good(V1) } 1 :- dist(V1,V2).
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 3.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 3; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 80.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 90.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 3; V2 >= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 70.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 >= 90.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 90.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 80; V2 <= 90.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 80.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 60.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 60.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 2.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 70; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 70.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 70.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 >= 3.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 80; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 2; V2 <= 3.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 2.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 3; V2 <= 4.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 0.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V2 >= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 3; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 80; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 60.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 4.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 80.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 70.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70; V2 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 3.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 2; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 3; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 2.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 80; V2 >= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70; V2 <= 90.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 2.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 3; V2 <= 4.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 1.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 4.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 <= 80.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3).
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 2.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 80.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 70.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 80.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 60.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 80; V2 >= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 80.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 80.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 90.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 60.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 3.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70; V2 <= 80.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 0.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 60.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 60.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 3; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 60.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 3; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 80.
+3 ~ 0 {good(V1) } 1 :- dist(V1,V2).
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 70.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 90.
+3 ~ 0 {good(V1) } 1 :- guess(V1,V2).
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 80.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 70.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 >= 80.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 90.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 >= 80.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 3; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 3; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 >= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 80.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 3.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70; V2 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 3; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 70; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 2; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 3; V2 <= 4.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 80.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 1.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2; V2 <= 4.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 4.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60; V2 <= 80.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1; V2 <= 2.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 80; V2 <= 90.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70.
+4 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 2; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 2.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 >= 4.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 1.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 2.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 2.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 <= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1; V2 <= 2.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0; V2 <= 3.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 60.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2; V2 <= 3.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 90.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 2.
+4 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3).
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80; V2 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 70; V2 <= 80.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 60; V2 <= 80.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 70; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 2; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 80; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 3; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 90.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 80.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 80.
+3 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 80.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 <= 2.
+2 ~ 1 {good(V1) } 1 :- guess(V1,V2).
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 70.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 1.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 3.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 0; V2 <= 2.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 <= 70; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 3; V2 <= 70.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 0; V2 <= 60.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 0; V2 >= 60.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 0.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 4; V3 <= 70.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V3 <= 80.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 2; V2 <= 4.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 <= 1; V2 <= 2.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 80; V2 <= 90.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 <= 80.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 3.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 2; V3 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 80; V2 <= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 <= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V3 <= 60.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 <= 1; V2 <= 2.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 4; V2 <= 70.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 60.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 3; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 1; V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 4; V2 >= 80.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 >= 1.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 >= 1; V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 2.
+4 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 2; V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 80.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 70.
+6 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 1; V2 >= 2; V2 <= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 >= 70; V2 <= 80.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 <= 3.
+4 ~ 1 {good(V1) } 1 :- guess(V1,V2); V2 >= 60; V2 >= 70.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V3 <= 70.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); V2 <= 60; V2 <= 80.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 >= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 1; V2 <= 4.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 3.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 80; V2 >= 90.
+5 ~ 1 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 3; V2 >= 4.
+5 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 <= 80.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V3 <= 2; V2 <= 90.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V3); dist(V1,V2); V2 >= 0; V2 >= 1.
+6 ~ 0 {good(V1) } 1 :- guess(V1,V2); dist(V1,V3); V2 >= 70; V2 <= 90.
+3 ~ 1 {good(V1) } 1 :- dist(V1,V2); V2 >= 2.
+5 ~ 0 {good(V1) } 1 :- dist(V1,V2); V2 >= 0; V2 <= 4.
+
+
 %ILASP --version=4 -d ilasp_task.las
 %Finally pick the hypothesis with the least counterexamples (the one ABOVE the number of counterexamples)
 

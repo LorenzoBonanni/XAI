@@ -286,7 +286,17 @@ class SR_DQN(OffPolicyAlgorithm):
         return state_dicts, []
 
 
+
     def _get_suggested_action(self, observed_img) -> List[int]:
+        ACTIONS = {
+            'left': 0,
+            'right': 1,
+            'forward': 2,
+            'pickup': 3,
+            'drop': 4,
+            'toggle': 5,
+            'done': 6
+        }
         observables = self._get_observables(observed_img)
         # Observables returned as an array of tuples,
         # each containing the string representing the name of the predicate and an array of arguments:
@@ -296,16 +306,37 @@ class SR_DQN(OffPolicyAlgorithm):
         #  ("goal", [offset_x, offset_y])
         #  ("carryingKey", [color])
         #  (door_state, [color]), where door_state can be 'open', 'closed', or 'locked'
+        key = obs[0] if len(obs:=[o for o in observables if 'key' in o]) > 0 else None
+        door = obs[0] if len(obs:=[o for o in observables if 'door' in o]) > 0 else None
+        walls = [o for o in observables if 'wall' in o]
+        goal = obs[0] if len(obs:=[o for o in observables if 'goal' in o]) > 0 else None
+        carryingKey = obs[0] if len(obs:=[o for o in observables if 'carryingKey' in o]) > 0 else None
+        door_status = obs[0] if len(obs:=[o for o in observables if 'locked' in o or 'closed' in o or 'open' in o]) > 0 else None
+
 
         actions = [] # POPULATE THE SET WITH THE ACTIONS SUGGESTED BY THE RULES
         # Remember to map the high-level rules below to the actions implemented in the environment!
-        #   pickup(X) :- key(X), samecolor(X,Y), door(Y), notcarrying       Hint: must predicates (e.g. samecolor(X,Y)) must be derived!
-        #   open(X) :- door(X), locked(X), key(Z), carryingKey(Z), samecolor(X,Z)
-        #   goto :- goal(X), unlocked
         # You can check the environment actions here: https://minigrid.farama.org/environments/minigrid/DoorKeyEnv/#action-space
         # Hint: the actions marked as 'unused' are, in fact, useless, but the agent could still perform them
-        weights = None # Assign weights to the actions according to self.conf_level (value in [0,1] that states how much we trust the rules)
-        return random.choices(list(range(self.env.action_space.n)), weights, k=1) 
+        key_color = key[1][0] if key is not None else None
+        door_color = door[1][0] if door is not None else None
+        #   open(X) :- door(X), locked(X), key(Z), carryingKey(Z), samecolor(X,Z)
+        if (door_status is not None and door_status[0] == 'locked') and key_color == door_color and carryingKey is not None:
+            actions.append(ACTIONS['toggle'])
+        #   pickup(X) :- key(X), samecolor(X,Y), door(Y), notcarrying       Hint: must predicates (e.g. samecolor(X,Y)) must be derived!
+        if key_color == door_color and carryingKey is None:
+            actions.append(ACTIONS['pickup'])
+        #   goto :- goal(X), unlocked
+        # I don't know if it is correct
+        if goal is not None and (door_status is not None and door_status[0] == 'open'):
+            actions.append(ACTIONS['done'])
+        weight_logic = self.conf_level / len(actions) if len(actions) > 0 else 0
+        weight_other = (1-self.conf_level) / len(set(range(self.env.action_space.n)) - set(actions))
+
+        weights = [weight_logic if a in actions else weight_other for a in range(self.env.action_space.n)] # Assign weights to the actions according to self.conf_level (value in [0,1] that states how much we trust the rules)
+        # normalize weights
+        weights = [w / sum(weights) for w in weights]
+        return random.choices(list(range(self.env.action_space.n)), weights, k=1)
     
     def _get_observables(self, img):
         import numpy as np

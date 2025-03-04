@@ -104,12 +104,25 @@ int SIMULATOR::SelectRandom(const STATE &state, const HISTORY &history,
         GenerateLegal(state, history, actions, status);
         GenerateFromRules15(state, belief, actions_r, status);
         // now we have arrays (std::vector) actions (all possible actions) and actions_r (actions suggested by rules)  
-
-        // TODO: select actions based on a weighted probability distribution
         // 1. actions_r with probability 0.8 ($\rho_h$), actions with probability 0.2 ($1 - \rho_h$)
         // 2. actions_r is a subset of actions.
         // 3. for each action in actions, assign the correct probability and push back into final_prob_actions.
+        double prob_actions_r = 0.8 / actions_r.size();
+        double prob_actions = 0.2 / (actions.size() - actions_r.size());
+        for (int i = 0; i < actions.size(); i++) {
+            if (find(actions_r.begin(), actions_r.end(), actions[i]) != actions_r.end()) {
+                final_prob_actions.push_back(prob_actions_r);
+            } else {
+                final_prob_actions.push_back(prob_actions);
+            }
+        }
+        
         // 4. Normalize final_prob_actions and sample from actions according to weights in final_prob_actions.
+        // Normalize final_prob_actions 
+        double sum = std::accumulate(final_prob_actions.begin(), final_prob_actions.end(), 0.0);
+        for (int i = 0; i < final_prob_actions.size(); i++) {
+            final_prob_actions[i] /= sum;
+        }
 
         if(actions.size() == 0) 
         {
@@ -117,7 +130,9 @@ int SIMULATOR::SelectRandom(const STATE &state, const HISTORY &history,
         }
         else 
         {
-            return actions[Random(actions.size())];
+            // TODO: select actions based on a weighted probability distribution
+            std::discrete_distribution<int> distribution(final_prob_actions.begin(), final_prob_actions.end());
+            return actions[distribution(gen)];
         }
     }
 

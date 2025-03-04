@@ -6,7 +6,7 @@ from tigramite import data_processing as pp
 from tigramite import plotting as tp
 from tigramite.pcmci import PCMCI
 from tigramite.independence_tests.parcorr import ParCorr
-
+from sklearn.preprocessing import StandardScaler
 import time
 
 import warnings
@@ -26,16 +26,18 @@ def read_preprocess_data(path):
     ts = np.mean(df['Timestamp'].diff())*1e-3
     columns_to_drop = ['timestamp']
     df.drop(columns=[col for col in columns_to_drop if col in df.columns or col == df.columns[0]], inplace=True)
+    # # Remove rows containing NaN values
+    # df.dropna(inplace=True)
+    # Remove columns with constant values
     return df, ts
 
 
 
 # Executes the PCMCI causal discovery algorithm
 def run_pcmci(data, delay):
-    #TODO: implement PCMCI
-    pass
-
-
+    data = np.nan_to_num(data)
+    pcmci = PCMCI(dataframe=pp.DataFrame(data), cond_ind_test=ParCorr(), verbosity=1)
+    return pcmci.run_pcmci(tau_max=delay, pc_alpha=ALPHA)
 
 
 
@@ -44,7 +46,7 @@ def run_pcmci(data, delay):
 
 def main():
     #modify paths to dataset folders
-    normal_df, ts = read_preprocess_data("data/pepper_csv/normal.csv")
+    normal_df, ts = read_preprocess_data("pepper_csv/normal.csv")
 
     columns = normal_df.columns
     normal_data = pp.DataFrame(np.nan_to_num(normal_df.values[:int(TRAINING_FRAC*np.shape(normal_df.values)[0]), :]))
@@ -71,19 +73,21 @@ def main():
             sorted_freq = [s for s in sorted_freq if s <= max_freq]
             break
 
-    #aubsample and filter 
+    #subsample and filter 
     normal_data.values[0] = normal_data.values[0][::max(1, int(np.floor(1/10/max_freq))), :]
     
-    # TODO: remove nearly constant time series: i.e., time series whose standard deviation is lower than 1% of the mean
-    nonconst_data = normal_data.values[0]
-    nonconst = list(range(0, np.shape(nonconst_data)[1]))
-    
+    # remove nearly constant time series: i.e., time series whose standard deviation is lower than 1% of the mean
+    nonconst = [idx for idx in range(np.shape(normal_data.values[0])[1]) if np.std(normal_data.values[0][:, idx]) > 0.01 * np.mean(normal_data.values[0][:, idx])]
+    nonconst_data = normal_data.values[0][:, nonconst]
+    scaler = StandardScaler()
+    nonconst_data = scaler.fit_transform(nonconst_data)
+
     #learn causal model
     max_delay = int(np.floor(max_freq / np.mean(np.unique(sorted_freq))))
     start = time.time()
     results = run_pcmci(nonconst_data, max_delay)
     elapsed = time.time() - start
-    np.savez("models/pepper_normal_07", val_matrix=results["val_matrix"], p_matrix=results["p_matrix"], var=columns, subsample=max(1, int(np.floor(1/10/max_freq))), nonconst=nonconst, time=elapsed)
+    np.savez("models/pepper_normal_07_my", val_matrix=results["val_matrix"], p_matrix=results["p_matrix"], var=columns, subsample=max(1, int(np.floor(1/10/max_freq))), nonconst=nonconst, time=elapsed)
 
 
       

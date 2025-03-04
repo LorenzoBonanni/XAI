@@ -121,15 +121,42 @@ ped_pos(7, 8, 10).
 %TO BE COMPLETED (action preconditions as aggregates, effects and constraints...)
 %possible actions are move_slow(dir), move_fast(dir), moving the agent in direction dir of 1 or 2 cells respectively.
 
+% 0 { 
+%    move_slow(w, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X-1,Y), not forbidden_cell(X-1,Y);
+%    move_slow(e, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X+1,Y), not forbidden_cell(X+1,Y);
+%    move_slow(n, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X,Y-1), not forbidden_cell(X,Y-1);
+%    move_slow(s, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X,Y+1), not forbidden_cell(X,Y+1);
+%    move_fast(w, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X-1,Y), not obs_pos(X-2,Y), not forbidden_cell(X-1,Y), not forbidden_cell(X-2,Y);
+%    move_fast(e, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X+1,Y), not obs_pos(X+2,Y), not forbidden_cell(X+1,Y), not forbidden_cell(X+2,Y);
+%    move_fast(n, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X,Y-1), not obs_pos(X,Y-2), not forbidden_cell(X,Y-1), not forbidden_cell(X,Y-2);
+%    move_fast(s, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), not obs_pos(X,Y+1), not obs_pos(X,Y+2), not forbidden_cell(X,Y+1), not forbidden_cell(X,Y+2)
+% } 1.
+
+0 { 
+   move_slow(D, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), dir(D);
+   move_fast(D, t): agent_pos(X, Y, t), not goal_pos(X, Y), coord(X), coord(Y), dir(D)
+} 1.
+% 0{ move_slow(V1, t) : goal(V1, V2, t), V2>0; move_fast(V1, t) : goal(V1, V2, t), V2>1 }1.
+
 % HINT: use weak constraints to encourage the agent to preserve the safety of pedestrians and avoid obstacles!
+agent_pos(X,Y+1, t+1)            :- move_slow(n,t), agent_pos(X,Y, t).
+agent_pos(X,Y-1, t+1)            :- move_slow(s,t), agent_pos(X,Y, t).
+agent_pos(X-1,Y, t+1)            :- move_slow(w,t), agent_pos(X,Y, t).
+agent_pos(X+1,Y, t+1)            :- move_slow(e,t), agent_pos(X,Y, t).
+
+agent_pos(X,Y+2, t+1)            :- move_fast(n,t), agent_pos(X,Y, t).
+agent_pos(X,Y-2, t+1)            :- move_fast(s,t), agent_pos(X,Y, t).
+agent_pos(X-2,Y, t+1)            :- move_fast(w,t), agent_pos(X,Y, t).
+agent_pos(X+2,Y, t+1)            :- move_fast(e,t), agent_pos(X,Y, t).
 
 at_goal(t) :- goal_pos(X,Y), agent_pos(X,Y,t).
+:- move_slow(D, t), 
 
 #program check(t).
-%:- query(t), t<3. %for debug purposes
+% :- query(t), t<3. %for debug purposes
 :- not at_goal(t), query(t).
 
 % output
-% #show agent_pos/3.
+#show agent_pos/3.
 #show move_fast/2.
 #show move_slow/2.

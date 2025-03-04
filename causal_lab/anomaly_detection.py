@@ -15,7 +15,7 @@ import time
 import warnings
 from scipy.stats import ConstantInputWarning
 
-warnings.filterwarnings('ignore', category=ConstantInputWarning)
+warnings.filterwarnings('ignore')
 
 # Constants
 ALPHA = 0.05 # Significance level for ParCorr
@@ -47,8 +47,12 @@ fpos = []
 tneg = []
 fneg = []
 
-causal_model = "models/pepper_normal_07.npz"
+causal_model = "models/pepper_normal_07_my.npz"
+# causal_model = "models/pepper_normal_07.npz"
+
 f = np.load(causal_model, allow_pickle=True)
+f_my = np.load(causal_model, allow_pickle=True)
+
 val_matrix = f["val_matrix"]
 p_matrix = f["p_matrix"]
 var = list(f["var"])
@@ -60,17 +64,17 @@ normal_matrix = val_matrix * (p_matrix < ALPHA) * (abs(val_matrix) > np.mean(abs
 normal_p_matrix = p_matrix * (p_matrix < ALPHA) * (abs(val_matrix) > np.mean(abs(val_matrix)))
 
 #modify paths to dataset folders
-normal_df = read_preprocess_data("data/pepper_csv/normal.csv")
-attack_dfs = [read_preprocess_data("data/pepper_csv/WheelsControl.csv")]
-attack_dfs.append(read_preprocess_data("data/pepper_csv/JointControl.csv"))
-attack_dfs.append(read_preprocess_data("data/pepper_csv/LedsControl.csv"))
+normal_df = read_preprocess_data("pepper_csv/normal.csv")
+attack_dfs = [read_preprocess_data("pepper_csv/WheelsControl.csv")]
+attack_dfs.append(read_preprocess_data("pepper_csv/JointControl.csv"))
+attack_dfs.append(read_preprocess_data("pepper_csv/LedsControl.csv"))
 
 
 
 #PLOT CAUSAL GRAPH
-# pcmci = PCMCI(dataframe=pp.DataFrame(np.nan_to_num(normal_df.values[:, nonconst])), cond_ind_test=ParCorr())
-# # graph = pcmci.get_graph_from_pmatrix(p_matrix=normal_p_matrix, alpha_level=ALPHA, 
-# #         tau_min=0, tau_max=delay, link_assumptions=None)
+# pcmci = PCMCI(dataframe=pp.DataFrame(np.nan_to_num(normal_df.values[:, nonconst])), cond_ind_test=ParCorr(), verbosity=1)
+# # # graph = pcmci.get_graph_from_pmatrix(p_matrix=normal_p_matrix, alpha_level=ALPHA, 
+# # #         tau_min=0, tau_max=delay, link_assumptions=None)
 # normal_matrix[abs(normal_matrix) < 0.3] = 1 #remove weak links
 # graph = pcmci.get_graph_from_pmatrix(p_matrix=normal_matrix, alpha_level=0.99, 
 #         tau_min=0, tau_max=delay, link_assumptions=None)
@@ -99,7 +103,15 @@ indices = np.array(np.where(normal_matrix != 0)) # where the causal links are re
 causal_coeffs = dict() #for each variable key, store linear coeffs
 for var in np.unique(indices[1,:]):
     #TODO: compute causal_coeffs from normal_data (i.e., TRAINING_FRAC of the dataset) via lstsq (least squares)
-    pass
+    var_indices = [indices[:,k] for k in range(np.shape(indices)[1]) if indices[1,k] == var]
+    var_indices.sort(key= lambda a : a[-1])
+    stack_list = []
+    max_delay = var_indices[-1][2]
+    for el in var_indices:
+        stack_list.append(normal_data[max_delay-el[2] : np.shape(normal_data)[0]-el[2], el[0]])
+    stack_list.append(np.ones(np.shape(normal_data)[0]-max_delay))
+    coeffs = np.linalg.lstsq(np.column_stack(stack_list), normal_data[max_delay:, var])[0][:-1]
+    causal_coeffs[var] = coeffs
 
 
 #NORMAL OUAD

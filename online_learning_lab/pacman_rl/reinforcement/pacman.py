@@ -41,8 +41,12 @@ The keys are 'a', 's', 'd', and 'w' to move (or arrow keys).  Have fun!
 """
 import heapq
 import itertools
+import math
 import subprocess
 import numpy as np
+from numpy.ma import unique
+from pyparsing import alphas
+
 from game import GameStateData
 from game import Game
 from game import Directions
@@ -803,10 +807,23 @@ def runGames(layout, horizon, pacman, ghosts, display, numGames, record, seed, n
 
     return games
 
+def get_direction(dx, dy):
+    if dx > 0:
+        return 'east'
+    elif dx < 0:
+        return 'west'
+    elif dy > 0:
+        return 'north'
+    elif dy < 0:
+        return 'south'
+    else:
+        return 'none'
 
 def generateTask(episodes, batch):
     start = time.time()
-    examples = [""]
+    examples = []
+    id_examples = 0
+    ACTIONS = {"north", "south", "east", "west"}
     for reward, count, episode in episodes:
         wall_positions = set(episode[0]['wall_pos'])
         step_counter = 0
@@ -824,21 +841,62 @@ def generateTask(episodes, batch):
             food_positions = step['state']['food_pos']
             # Position of the power capsules as an array of (X,Y) coordinates
             capsule_positions = step['state']['capsule_pos']
-            examples.extend([
-                f" This string should contain the example generated from the training step"
-            ])
-                # Generate the following observables:
-                # food(Dir, Dist)
-                # ghost(Dir, Dist)
-                # capsule(Dir, Dist)
-                # wall(Dir)
-                # with Dir \in {north, south, east, west} and Dist \in [0,10]
+            step_score = step['score']
+            # examples.extend([
+            #     f" This string should contain the example generated from the training step"
+            # ])
+            # Generate the following observables:
+            # food(Dir, Dist)
+            # ghost(Dir, Dist)
+            # capsule(Dir, Dist)
+            # wall(Dir)
+            # with Dir \in {north, south, east, west} and Dist \in [0,10]
+            # Generate observables for food, ghosts, capsules, and walls
+            observables = []
 
+            # Food observables
+            for food_pos in food_positions:
+                dx, dy = food_pos[0] - pacman_pos[0], food_pos[1] - pacman_pos[1]
+                direction = get_direction(dx, dy)
+                distance = manhattanDistance(pacman_pos, food_pos)
+                if distance <= 10:  # Only include objects within a distance of 10
+                    observables.append(f"food({direction}, {distance})")
+
+            # Ghost observables
+            for ghost_pos in ghost_positions:
+                dx, dy = ghost_pos[0] - pacman_pos[0], ghost_pos[1] - pacman_pos[1]
+                direction = get_direction(dx, dy)
+                distance = manhattanDistance(pacman_pos, ghost_pos)
+                if distance <= 10:
+                    observables.append(f"ghost({direction}, {distance})")
+
+            # Capsule observables
+            for capsule_pos in capsule_positions:
+                dx, dy = capsule_pos[0] - pacman_pos[0], capsule_pos[1] - pacman_pos[1]
+                direction = get_direction(dx, dy)
+                distance = manhattanDistance(pacman_pos, capsule_pos)
+                if distance <= 10:
+                    observables.append(f"capsule({direction}, {distance})")
+
+            # Wall observables
+            for wall_pos in wall_positions:
+                dx, dy = wall_pos[0] - pacman_pos[0], wall_pos[1] - pacman_pos[1]
+                direction = get_direction(dx, dy)
+                observables.append(f"wall({direction})")
+            observables = set(observables)
+            id_examples += 1
+
+            obs = '. '.join(observables)
+            bad_actions = ', '.join([f"move({a})" for a in ACTIONS if a != action])
+            rescaled_return = math.ceil((step_score / 1000) * 10)
+            example = f"(ex{id_examples}@{rescaled_return}, {{move({action})}}, {{{bad_actions}}}, {{{obs}.}})"
+            example = '#pos' + example
+            examples.append(example)
             step_counter += len(step['state']['agents_config'])
 
     with open(f"ilp/tasks/fastlas_task_{batch}.las", 'w') as las_file:
-        for line in examples:
-            las_file.write(line)
+        examples = [e+".\n" for e in examples]
+        las_file.writelines(examples)
         with open(f"ilp/modebias.txt", 'r') as modeb:
             las_file.write(modeb.read())
     print("FastLAS task generation:", time.time() - start)
@@ -852,6 +910,11 @@ def generateRules(batch):
         print("Errore nell'esecuzione del comando:", e)
     print("FastLAS call: ", time.time() - start)
 
+def seed_everything(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 
 if __name__ == '__main__':
     """
@@ -864,6 +927,7 @@ if __name__ == '__main__':
 
     > python pacman.py --help
     """
+    seed_everything(0)
     args = readCommand(sys.argv[1:])  # Get game components based on input
     runGames(**args)
 
