@@ -1,2 +1,0 @@
-move(V0) :- caps_dist_geq(V0,V1,4), food_dist_geq(V0,V1,1), food_dist_leq(V0,V2,4), dir(V0), ranges_dist(V1), ranges_dist(V2).
-move(V0) :- food_dist_leq(V0,V2,1), dir(V0), ranges_dist(V2).

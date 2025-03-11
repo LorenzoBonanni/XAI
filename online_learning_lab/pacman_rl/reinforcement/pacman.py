@@ -927,7 +927,7 @@ if __name__ == '__main__':
 
     > python pacman.py --help
     """
-    seed_everything(0)
+    # seed_everything(0)
     args = readCommand(sys.argv[1:])  # Get game components based on input
     runGames(**args)
 

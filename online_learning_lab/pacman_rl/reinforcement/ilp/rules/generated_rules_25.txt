@@ -1,1 +1,0 @@
-move(V0) :- food_dist_leq(V0,V1,4), dir(V0), ranges_dist(V1).
